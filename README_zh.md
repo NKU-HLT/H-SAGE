@@ -2,7 +2,7 @@
 
 # H-SAGE: Holistic Speaker-Aware Guided Experts for MoE-based Multi-Talker ASR
 
-H-SAGE（Holistic Speaker-Aware Guided Experts）是一种面向多说话人自动语音识别（Multi-Talker Automatic Speech Recognition, MTASR）的架构，用于提升重叠语音场景下的转录能力。H-SAGE建立在GLAD框架基础之上，并针对其全局建模能力与专家路由机制进行了进一步优化。
+H-SAGE（Holistic Speaker-Aware Guided Experts）是一种面向多说话人自动语音识别（Multi-Talker Automatic Speech Recognition, MTASR）的架构，用于提升重叠语音场景下的转录能力。H-SAGE建立在[GLAD](https://arxiv.org/abs/2509.13093)框架基础之上，并针对其全局建模能力与专家路由机制进行了进一步优化。
 
 我们的核心动机主要包括两个方面：
 
@@ -90,6 +90,20 @@ GLAD 的最新结构更新主要体现在 每个 MoLE 引入了独立的 Global 
 其次，在具体实现上，我们采用 OA Loss 主要基于其良好的泛化能力与较低的设计复杂度。OA Loss 通过对声学状态（如静音、单说话人及重叠语音）进行建模，使得模型结构更加简洁，同时在不同场景与说话人配置下具有更强的适应性。因此，我们选择 OA Loss 作为显式监督方案。
 
 需要注意的是，我们的声学状态标签是基于混合语音的时长与时间偏移规则构造得到的，因此整体监督信号是较为粗粒度的近似标注，其中单说话人片段中仍可能包含静音等不确定因素。然而，即便在这种带有一定噪声的弱监督条件下，模型仍然取得了稳定提升，从而进一步验证了该方法设计的有效性与合理性。
+
+
+## 使用H-SAGE
+
+
+本项目基于[ESPnet](https://github.com/espnet/espnet)框架进行开发。
+
+步骤1：将本仓库中H-SAGE-NEW或者H-SAGE目录下的`egs2`，`espnet`，`espnet2`目录替换至官方[ESPnet](https://github.com/espnet/espnet)仓库对应目录中，并根据实际情况修改配置（如数据路径等）。
+
+步骤2：准备好数据集，例如本工作利用librispeech混合了一共1770小时的包含单说话人和双说话人的数据集。之后运行egs2下面的`run.sh`对应的数据预处理阶段的Stage。
+
+步骤3：准备好数据，运行egs2下面的`run.sh`。运行run.sh的stage11~stage13，在运行stage12~stage13之前，需要用average_ckpt.py把最后5个ckpt平均一下。
+
+步骤4：利用`run_pi_scoring.sh`进行模型评估。评估代码参考自[Speaker-Aware-CTC](https://github.com/kjw11/Speaker-Aware-CTC)，感谢其开源支持。
 
 
 ## 联系我们

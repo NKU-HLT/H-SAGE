@@ -4,7 +4,7 @@
 
 
 
-H-SAGE (Holistic Speaker-Aware Guided Experts) is an architecture designed for Multi-Talker Automatic Speech Recognition (MTASR), aiming to improve transcription performance under overlapped speech scenarios. Built upon GLAD, H-SAGE further enhances both global acoustic modeling and expert routing mechanisms.
+H-SAGE (Holistic Speaker-Aware Guided Experts) is an architecture designed for Multi-Talker Automatic Speech Recognition (MTASR), aiming to improve transcription performance under overlapped speech scenarios. Built upon [GLAD](https://arxiv.org/abs/2509.13093), H-SAGE further enhances both global acoustic modeling and expert routing mechanisms.
 
 Our design is motivated by two key observations:
 
@@ -88,6 +88,22 @@ First, the purpose of introducing explicit supervision (i.e., OA Loss) is to ver
 Second, in terms of implementation, we adopt OA Loss mainly due to its good generalization capability and relatively low design complexity. OA Loss models acoustic states, which leads to a simpler model structure and better adaptability across different scenarios and speaker configurations. Therefore, we select OA Loss as our form of explicit supervision.
 
 It is worth noting that the acoustic state labels are constructed based on the duration and temporal offsets of mixed speech segments. As a result, the supervision signals are coarse-grained and approximate, and single-speaker segments may still contain silence or other ambiguities. Nevertheless, even under such noisy and weak supervision conditions, the model consistently achieves performance improvements, further validating the effectiveness and soundness of the proposed design.
+
+## Using H-SAGE
+
+This project is developed based on the [ESPnet](https://github.com/espnet/espnet) framework.
+
+Step 1:
+Replace the `egs2`, `espnet`, and `espnet2` directories in this repository under H-SAGE-NEW or H-SAGE with the corresponding directories in the official [ESPnet](https://github.com/espnet/espnet) repository. Then modify the configuration files according to your environment (e.g., dataset paths).
+
+Step 2:
+Prepare the dataset. For example, in this work we construct a 1,770-hour mixed dataset based on LibriSpeech, including both single-speaker and two-speaker utterances. Then run the corresponding data preprocessing stages in `run.sh` under egs2.
+
+Step 3:
+After data preparation, run `run.sh` under egs2. Specifically, execute Stage 11 to Stage 13. Before running Stage 12–13, use average_ckpt.py to average the last five checkpoints.
+
+Step 4:
+Use `run_pi_scoring.sh` for model evaluation. The evaluation script is adapted from Speaker-Aware-CTC, and we thank the authors for their open-source contribution.
 
 
 ## Contact
