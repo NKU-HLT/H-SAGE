@@ -48,7 +48,7 @@ class MOE_MultiHeadedAttention(nn.Module):
         cross_attn=False,
         use_sdpa=False,
         num_experts=3, lora_rank=8, lora_alpha=1.0, lora_dropout=0.0,
-        router_dropout=0.0, global_router=True, use_dynamic_router=True
+        router_dropout=0.0, global_router=True, use_dynamic_router=True, use_holistic_view=True,
     ):
         """Construct an MultiHeadedAttention object."""
         super(MOE_MultiHeadedAttention, self).__init__()
@@ -59,16 +59,16 @@ class MOE_MultiHeadedAttention(nn.Module):
         self.h = n_head
         self.linear_q = MoLE(num_experts, n_feat, n_feat, 
                         lora_rank, lora_alpha, lora_dropout,
-                        router_dropout, global_router, use_dynamic_router)
+                        router_dropout, global_router, use_dynamic_router, use_holistic_view)
         self.linear_k = MoLE(num_experts, n_feat, n_feat, 
                         lora_rank, lora_alpha, lora_dropout,
-                        router_dropout, global_router, use_dynamic_router)
+                        router_dropout, global_router, use_dynamic_router, use_holistic_view)
         self.linear_v = MoLE(num_experts, n_feat, n_feat, 
                         lora_rank, lora_alpha, lora_dropout,
-                        router_dropout, global_router, use_dynamic_router)
+                        router_dropout, global_router, use_dynamic_router, use_holistic_view)
         self.linear_out = MoLE(num_experts, n_feat, n_feat, 
                         lora_rank, lora_alpha, lora_dropout,
-                        router_dropout, global_router, use_dynamic_router)
+                        router_dropout, global_router, use_dynamic_router, use_holistic_view)
         self.attn = None
         self.dropout = (
             nn.Dropout(p=dropout_rate) if not use_flash_attn else nn.Identity()
@@ -303,12 +303,12 @@ class MOE_LegacyRelPositionMultiHeadedAttention(MOE_MultiHeadedAttention):
 
     def __init__(self, n_head, n_feat, dropout_rate, zero_triu=False,
                  num_experts=3, lora_rank=8, lora_alpha=1.0, lora_dropout=0.0,
-                 router_dropout=0.0, global_router=True, use_dynamic_router=True):
+                 router_dropout=0.0, global_router=True, use_dynamic_router=True, use_holistic_view=True):
         """Construct an RelPositionMultiHeadedAttention object."""
         super().__init__(n_head, n_feat, dropout_rate, 
                          False, False, False, False, False,
                          num_experts, lora_rank, lora_alpha, lora_dropout,
-                         router_dropout, global_router, use_dynamic_router)
+                         router_dropout, global_router, use_dynamic_router, use_holistic_view)
         self.zero_triu = zero_triu
         # linear transformation for positional encoding
         self.linear_pos = nn.Linear(n_feat, n_feat, bias=False)
@@ -403,12 +403,12 @@ class MOE_RelPositionMultiHeadedAttention(MOE_MultiHeadedAttention):
 
     def __init__(self, n_head, n_feat, dropout_rate, zero_triu=False,
                  num_experts=3, lora_rank=8, lora_alpha=1.0, lora_dropout=0.0,
-                 router_dropout=0.0, global_router=True, use_dynamic_router=True):
+                 router_dropout=0.0, global_router=True, use_dynamic_router=True, use_holistic_view=True):
         """Construct an RelPositionMultiHeadedAttention object."""
         super().__init__(n_head, n_feat, dropout_rate, 
                          False, False, False, False,False,
                          num_experts, lora_rank, lora_alpha, lora_dropout,
-                         router_dropout, global_router, use_dynamic_router)
+                         router_dropout, global_router, use_dynamic_router, use_holistic_view)
         self.zero_triu = zero_triu
         # linear transformation for positional encoding
         self.linear_pos = nn.Linear(n_feat, n_feat, bias=False)

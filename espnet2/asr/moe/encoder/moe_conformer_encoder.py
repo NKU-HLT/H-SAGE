@@ -60,7 +60,6 @@ from espnet2.asr.moe.nets.moe_encoder_layer import MOE_EncoderLayer
 from espnet2.asr.moe.nets.global_router import (
     Attention_Global_Router,
     Linear_Global_Router,
-    Conv_Attention_Global_Router,
     Attention_Global_Router_woloss,
 )
 
@@ -143,9 +142,11 @@ class MOE_ConformerEncoder(AbsEncoder):
         lora_alpha: int = 1,
         lora_dropout: float = 0.0,
         router_dropout: float = 0.0,
+        use_holistic_view=True,
         
         global_router_loss_weight: str = "0.0,0.2,0.8",
         class_weight: float = 5.0, 
+        global_router_type = "attention",
     ):
         super().__init__()
         self._output_size = output_size
@@ -254,6 +255,7 @@ class MOE_ConformerEncoder(AbsEncoder):
                     router_dropout,
                     global_router,
                     use_dynamic_router,
+                    use_holistic_view,
                 )
             else:
                 positionwise_layer = PositionwiseFeedForward            
@@ -313,6 +315,7 @@ class MOE_ConformerEncoder(AbsEncoder):
                     router_dropout,
                     global_router,
                     use_dynamic_router,
+                    use_holistic_view,
                 )
             else:
                 encoder_selfattn_layer = MultiHeadedAttention
@@ -341,6 +344,7 @@ class MOE_ConformerEncoder(AbsEncoder):
                     router_dropout,
                     global_router,
                     use_dynamic_router,
+                    use_holistic_view,
                 )
                 logging.warning(
                     "Using legacy_rel_selfattn and it will be deprecated in the future."
@@ -371,6 +375,7 @@ class MOE_ConformerEncoder(AbsEncoder):
                     router_dropout,
                     global_router,
                     use_dynamic_router,
+                    use_holistic_view,
                 ) 
             else:
                 encoder_selfattn_layer = RelPositionMultiHeadedAttention
@@ -441,12 +446,12 @@ class MOE_ConformerEncoder(AbsEncoder):
 
         self.global_router_fc = None
         if global_router:
-            # self.global_router_fc = Attention_Global_Router_woloss(self._output_size, num_experts, lossweight=global_router_loss_weight, class_weight=class_weight)
-            self.global_router_fc = Attention_Global_Router(self._output_size, num_experts, lossweight=global_router_loss_weight, class_weight=class_weight)
-            
-            
-            # self.global_router_fc = Linear_Global_Router(self._output_size, num_experts)
-            # self.global_router_fc = Conv_Attention_Global_Router(self._output_size, num_experts, lossweight=global_router_loss_weight, class_weight=class_weight)
+            if global_router_type == "attention":
+                self.global_router_fc = Attention_Global_Router(self._output_size, num_experts, lossweight=global_router_loss_weight, class_weight=class_weight)
+            elif global_router_type == "attention_woloss":
+                self.global_router_fc = Attention_Global_Router_woloss(self._output_size, num_experts, lossweight=global_router_loss_weight, class_weight=class_weight)
+            elif global_router_type == "linear":
+                self.global_router_fc = Linear_Global_Router(self._output_size, num_experts)
 
     def output_size(self) -> int:
         return self._output_size

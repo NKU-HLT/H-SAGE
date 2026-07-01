@@ -21,15 +21,15 @@ class MOE_PositionwiseFeedForward(torch.nn.Module):
 
     def __init__(self, idim, hidden_units, dropout_rate, activation=torch.nn.ReLU(),
                  num_experts=3, lora_rank=8, lora_alpha=1.0, lora_dropout=0.0,
-                 router_dropout=0.0, global_router=True, use_dynamic_router=True):
+                 router_dropout=0.0, global_router=True, use_dynamic_router=True, use_holistic_view=True):
         """Construct an PositionwiseFeedForward object."""
         super(MOE_PositionwiseFeedForward, self).__init__()
         self.w_1 = MoLE(num_experts, idim, hidden_units, 
                         lora_rank, lora_alpha, lora_dropout,
-                        router_dropout, global_router, use_dynamic_router)
+                        router_dropout, global_router, use_dynamic_router, use_holistic_view)
         self.w_2 = MoLE(num_experts, hidden_units, idim,
                         lora_rank, lora_alpha, lora_dropout,
-                        router_dropout, global_router, use_dynamic_router)
+                        router_dropout, global_router, use_dynamic_router, use_holistic_view)
         self.dropout = torch.nn.Dropout(dropout_rate)
         self.activation = activation
 

@@ -41,157 +41,7 @@ class LoRAExpert(nn.Module):
         return out
 
 
-class SourceMoLE(nn.Module):
-    def __init__(self, 
-                 num_experts, d_in, d_out, 
-                 rank=8, alpha=8.0, lora_dropout=0.0,
-                 router_dropout=0.0,
-                 global_router=False, 
-                 use_dynamic_router=True,
-                 **kwargs):
-        super().__init__()
-        self.num_experts = num_experts
-        self.d_in = d_in
-        self.d_out = d_out
-        self.rank = rank
-        self.alpha = alpha
-        self.global_router = global_router
-        self.fc = nn.Linear(d_in, d_out)
 
-        if rank > 0:
-            self.experts = nn.ModuleList([
-            LoRAExpert(d_in, d_out, rank, alpha, lora_dropout) for _ in range(num_experts)
-            ])
-        else:
-            self.experts = None
-        
-        self.use_dynamic_router = use_dynamic_router
-        if self.global_router and self.use_dynamic_router:
-            self.dynamic_router = nn.Linear(d_in, 2)
-        self.router = nn.Linear(d_in, num_experts, bias=False)
-        self.router_dropout = nn.Dropout(router_dropout) if router_dropout > 0 else None
-
-    def forward(self, x, global_weights=None):
-        
-        B, T, D = x.shape
-        base_output = self.fc(x)  # (B, T, d_out)
-
-        if self.rank <= 0  or self.experts is None:
-            return base_output, torch.zeros(B, T, self.num_experts, device=x.device, dtype=x.dtype)
-        
-        router_logits = self.router(x)
-        if self.router_dropout is not None:
-            router_logits = self.router_dropout(router_logits)
-
-        local_weights = F.softmax(router_logits, dim=-1)  # (B, T, num_experts)
-        routing_weights = local_weights
-        
-        if global_weights is not None:
-            if isinstance(global_weights, torch.Tensor):
-                if self.global_router and self.use_dynamic_router:
-                    dy = F.softmax(self.dynamic_router(x), dim=-1)
-                    routing_weights = dy[:, :, 0:1] * routing_weights + dy[:, :, 1:2] * global_weights
-                elif self.global_router:
-                    routing_weights = routing_weights + global_weights
-                else:
-                    routing_weights = routing_weights
-            else:
-                global_weights = global_weights[0]
-                if self.global_router and self.use_dynamic_router:
-                    dy = F.softmax(self.dynamic_router(x), dim=-1)
-                    routing_weights = dy[:, :, 0:1] * routing_weights + dy[:, :, 1:2] * global_weights
-                elif self.global_router:
-                    routing_weights = routing_weights + global_weights
-                else:
-                    routing_weights = routing_weights
-
-        lora_output = torch.zeros_like(base_output)
-        for i, expert in enumerate(self.experts):
-            expert_weight = routing_weights[:, :, i:i+1]  # (B, T, 1)
-            expert_out = expert(x)  # (B, T, d_out)
-            lora_output += expert_weight * expert_out
-        
-        return base_output + lora_output, routing_weights
-
-
-class InfoAwareMoLE(nn.Module):
-    def __init__(self, 
-                 num_experts, d_in, d_out, 
-                 rank=8, alpha=8.0, lora_dropout=0.0,
-                 router_dropout=0.0,
-                 global_router=False, 
-                 use_dynamic_router=True,
-                 **kwargs):
-        super().__init__()
-        self.num_experts = num_experts
-        self.d_in = d_in
-        self.d_out = d_out
-        self.rank = rank
-        self.alpha = alpha
-        self.global_router = global_router
-        self.fc = nn.Linear(d_in, d_out)
-
-        if rank > 0:
-            self.experts = nn.ModuleList([
-            LoRAExpert(d_in, d_out, rank, alpha, lora_dropout) for _ in range(num_experts)
-            ])
-        else:
-            self.experts = None
-        
-        self.use_dynamic_router = use_dynamic_router
-        if self.global_router and self.use_dynamic_router:
-            self.dynamic_router = nn.Linear(d_in + 256, 2)
-            
-        self.router = nn.Linear(d_in, num_experts, bias=False)
-        self.router_dropout = nn.Dropout(router_dropout) if router_dropout > 0 else None
-
-    def forward(self, x, global_weights=None):
-        
-        B, T, D = x.shape
-        base_output = self.fc(x)  # (B, T, d_out)
-
-        if self.rank <= 0  or self.experts is None:
-            return base_output, torch.zeros(B, T, self.num_experts, device=x.device, dtype=x.dtype)
-        
-        router_logits = self.router(x)
-        if self.router_dropout is not None:
-            router_logits = self.router_dropout(router_logits)
-
-        local_weights = F.softmax(router_logits, dim=-1)  # (B, T, num_experts)
-        routing_weights = local_weights
-        
-        if global_weights is not None:
-            if isinstance(global_weights, torch.Tensor):
-                if self.global_router and self.use_dynamic_router:
-                    dy = F.softmax(self.dynamic_router(x), dim=-1)
-                    routing_weights = dy[:, :, 0:1] * routing_weights + dy[:, :, 1:2] * global_weights
-                elif self.global_router:
-                    routing_weights = routing_weights + global_weights
-                else:
-                    routing_weights = routing_weights
-            else:
-                global_infos = global_weights[1]
-                global_weights = global_weights[0]
-                
-                if self.global_router and self.use_dynamic_router:
-                    x_concat = torch.cat([x, global_infos], dim=-1)
-                    dy = F.softmax(self.dynamic_router(x_concat), dim=-1)
-                    routing_weights = dy[:, :, 0:1] * routing_weights + dy[:, :, 1:2] * global_weights
-                elif self.global_router:
-                    routing_weights = routing_weights + global_weights
-                else:
-                    routing_weights = routing_weights
-
-        lora_output = torch.zeros_like(base_output)
-        for i, expert in enumerate(self.experts):
-            expert_weight = routing_weights[:, :, i:i+1]  # (B, T, 1)
-            expert_out = expert(x)  # (B, T, d_out)
-            lora_output += expert_weight * expert_out
-        
-        return base_output + lora_output, routing_weights
-    
-
-# InfoAware
 class MoLE(nn.Module):
     def __init__(self, 
                  num_experts, d_in, d_out, 
@@ -199,6 +49,7 @@ class MoLE(nn.Module):
                  router_dropout=0.0,
                  global_router=False, 
                  use_dynamic_router=True,
+                 use_holistic_view=True,
                  **kwargs):
         super().__init__()
         self.num_experts = num_experts
@@ -218,8 +69,11 @@ class MoLE(nn.Module):
         
         self.use_dynamic_router = use_dynamic_router
         if self.global_router and self.use_dynamic_router:
-            self.dynamic_router = nn.Linear(d_in + 256, 2)
-            
+            if use_holistic_view:
+                self.dynamic_router = nn.Linear(d_in + 256, 2)
+            else:
+                self.dynamic_router = nn.Linear(d_in, 2)
+
         self.router = nn.Linear(d_in, num_experts, bias=False)
         self.router_dropout = nn.Dropout(router_dropout) if router_dropout > 0 else None
 
@@ -252,7 +106,10 @@ class MoLE(nn.Module):
                 global_weights = global_weights[0]
                 
                 if self.global_router and self.use_dynamic_router:
-                    x_concat = torch.cat([x, global_infos], dim=-1)
+                    if global_infos is not None:
+                        x_concat = torch.cat([x, global_infos], dim=-1)
+                    else:
+                        x_concat = x
                     dy = F.softmax(self.dynamic_router(x_concat), dim=-1)
                     routing_weights = dy[:, :, 0:1] * routing_weights + dy[:, :, 1:2] * global_weights
                 elif self.global_router:
@@ -267,79 +124,4 @@ class MoLE(nn.Module):
             lora_output += expert_weight * expert_out
         
         return base_output + lora_output, routing_weights
-
-
-# Orginal
-class MoLE1(nn.Module):
-    def __init__(self, 
-                 num_experts, d_in, d_out, 
-                 rank=8, alpha=8.0, lora_dropout=0.0,
-                 router_dropout=0.0,
-                 global_router=False, 
-                 use_dynamic_router=True,
-                 **kwargs):
-        super().__init__()
-        self.num_experts = num_experts
-        self.d_in = d_in
-        self.d_out = d_out
-        self.rank = rank
-        self.alpha = alpha
-        self.global_router = global_router
-        self.fc = nn.Linear(d_in, d_out)
-
-        if rank > 0:
-            self.experts = nn.ModuleList([
-            LoRAExpert(d_in, d_out, rank, alpha, lora_dropout) for _ in range(num_experts)
-            ])
-        else:
-            self.experts = None
-        
-        self.use_dynamic_router = use_dynamic_router
-        if self.global_router and self.use_dynamic_router:
-            self.dynamic_router = nn.Linear(d_in, 2)
-        self.router = nn.Linear(d_in, num_experts, bias=False)
-        self.router_dropout = nn.Dropout(router_dropout) if router_dropout > 0 else None
-
-    def forward(self, x, global_weights=None):
-        
-        B, T, D = x.shape
-        base_output = self.fc(x)  # (B, T, d_out)
-
-        if self.rank <= 0  or self.experts is None:
-            return base_output, torch.zeros(B, T, self.num_experts, device=x.device, dtype=x.dtype)
-        
-        router_logits = self.router(x)
-        if self.router_dropout is not None:
-            router_logits = self.router_dropout(router_logits)
-
-        local_weights = F.softmax(router_logits, dim=-1)  # (B, T, num_experts)
-        routing_weights = local_weights
-        
-        if global_weights is not None:
-            if isinstance(global_weights, torch.Tensor):
-                if self.global_router and self.use_dynamic_router:
-                    dy = F.softmax(self.dynamic_router(x), dim=-1)
-                    routing_weights = dy[:, :, 0:1] * routing_weights + dy[:, :, 1:2] * global_weights
-                elif self.global_router:
-                    routing_weights = routing_weights + global_weights
-                else:
-                    routing_weights = routing_weights
-            else:
-                global_weights = global_weights[0]
-                if self.global_router and self.use_dynamic_router:
-                    dy = F.softmax(self.dynamic_router(x), dim=-1)
-                    routing_weights = dy[:, :, 0:1] * routing_weights + dy[:, :, 1:2] * global_weights
-                elif self.global_router:
-                    routing_weights = routing_weights + global_weights
-                else:
-                    routing_weights = routing_weights
-
-        lora_output = torch.zeros_like(base_output)
-        for i, expert in enumerate(self.experts):
-            expert_weight = routing_weights[:, :, i:i+1]  # (B, T, 1)
-            expert_out = expert(x)  # (B, T, d_out)
-            lora_output += expert_weight * expert_out
-        
-        return base_output + lora_output, routing_weights
-
 
