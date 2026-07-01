@@ -21,7 +21,7 @@ asr_stats_tag=Stage2
 lm_tag=Stage2
 
 asr_config=configs/h-sage.yaml
-train_set=train_1mix2mix_stage2
+train_set=train_1mix2mix
 valid_set="dev_clean_2mix_valid"
 test_sets="test_clean_1mix test_clean_2mix test_clean_3mix dev_clean_1mix dev_clean_2mix dev_clean_3mix"
 inference_config=configs/decode/decode_asr_aed.yaml
