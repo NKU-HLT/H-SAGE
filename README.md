@@ -15,7 +15,7 @@ Our design is motivated by two key observations:
 
 The overall architecture of H-SAGE is illustrated in Figure 1.
 
-<p align="center"> <img src="assets/H-SAGE.pdf" width="600"/> </p>
+<p align="center"> <img src="assets/H-SAGE.png" width="600"/> </p>
 
 <p align="center"><em>Figure 1: Overview of the proposed H-SAGE framework. (a) SA-Encoder extracts global representations and is explicitly supervised by OA Loss. (b) Detailed architecture of SA-Encoder based on a self-attention mechanism. (c) Holistic Gating assigns expert weights by jointly considering global and local information.</em></p>
 
@@ -27,7 +27,7 @@ To address this limitation, we replace the original global feature extractor wit
 
 Moreover, we introduce an Overlap-Aware Loss (OA Loss) to explicitly supervise the extracted global features. By predicting frame-level acoustic states—including silence, single-speaker speech, and overlapped speech—the model is encouraged to learn speaker-aware global representations.
 
-<p align="center"> <img src="assets/OALoss.pdf" width="600"/> </p>
+<p align="center"> <img src="assets/OALoss.png" width="600"/> </p>
 
 <p align="center"><em>Figure 2: Overlap-Aware Loss</em></p>
 
