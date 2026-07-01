@@ -67,7 +67,7 @@ ngpu=$(echo $CUDA_VISIBLE_DEVICES | awk -F "," '{print NF}')
     --asr_text_fold_length 600 \
     --lm_fold_length 600 \
     --lm_train_text "data/${train_set}/text" "$@" \
-    --use_glad_loss true
+    --use_sage_loss true
 
 # average final 5 checkpoints (during traing, we save 20 checkpoints)
 python average_ckpt.py --dir exp/asr_train_asr_${asr_train_tag}
@@ -107,4 +107,4 @@ stop_stage=13
     --asr_text_fold_length 600 \
     --lm_fold_length 600 \
     --lm_train_text "data/${train_set}/text" "$@" \
-    --use_glad_loss true
+    --use_sage_loss true

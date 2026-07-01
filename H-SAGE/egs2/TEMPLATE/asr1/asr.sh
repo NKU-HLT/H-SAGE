@@ -91,7 +91,7 @@ num_splits_lm=1   # Number of splitting for lm corpus.
 # shellcheck disable=SC2034
 word_vocab_size=10000 # Size of word vocabulary.
 use_prompt=false # Use prompt ids for multi tasking
-use_glad_loss=true
+use_sage_loss=true
 use_lang_prompt=false # Use language prompt ids for multi lingual multi tasking
 use_nlp_prompt=false # Use text prompt ids for multi lingual multi tasking
 
@@ -1373,7 +1373,7 @@ if [ ${stage} -le 11 ] && [ ${stop_stage} -ge 11 ] && ! [[ " ${skip_stages} " =~
             _opts+="--train_data_path_and_name_and_type ${_split_dir}/${ref_text_files[$i]},${ref_text_names[$i]},text "
             _opts+="--train_shape_file ${_split_dir}/${ref_text_names[$i]}_shape.${token_type} "
         done
-        if ${use_glad_loss}; then
+        if ${use_sage_loss}; then
             _opts+="--train_data_path_and_name_and_type ${_asr_train_dir}/id2audiomask,audiomask,audiomask "
         fi
         _opts+="--multiple_iterator true "
@@ -1395,7 +1395,7 @@ if [ ${stage} -le 11 ] && [ ${stop_stage} -ge 11 ] && ! [[ " ${skip_stages} " =~
             _opts+="--train_data_path_and_name_and_type ${_asr_train_dir}/${ref_text_files[$i]},${ref_text_names[$i]},text "
             _opts+="--train_shape_file ${asr_stats_dir}/train/${ref_text_names[$i]}_shape.${token_type} "
         done
-        if ${use_glad_loss}; then
+        if ${use_sage_loss}; then
             _opts+="--train_data_path_and_name_and_type ${_asr_train_dir}/id2audiomask,audiomask,audiomask "
         fi
     fi
