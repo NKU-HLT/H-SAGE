@@ -93,16 +93,36 @@ It is worth noting that the acoustic state labels are constructed based on the d
 
 This project is developed based on the [ESPnet](https://github.com/espnet/espnet) framework.
 
-Step 1:
+**Step 1**:
 Replace the `egs2`, `espnet`, and `espnet2` directories in this repository under H-SAGE-NEW or H-SAGE with the corresponding directories in the official [ESPnet](https://github.com/espnet/espnet) repository. Then modify the configuration files according to your environment (e.g., dataset paths).
 
-Step 2:
-Prepare the dataset. For example, in this work we construct a 1,770-hour mixed dataset based on LibriSpeech, including both single-speaker and two-speaker utterances. Then run the corresponding data preprocessing stages in `run.sh` under egs2.
+**Step 2**:
 
-Step 3:
+Prepare the training dataset. In this work, we construct a mixed-speech dataset based on LibriSpeech with a total duration of approximately 1,770 hours, containing both single-speaker and two-speaker utterances. After preparing the data, run the corresponding data preprocessing stages in `run.sh` under egs2 to generate features.
+
+In addition, an auxiliary target file for OA Loss must be generated in advance and placed under the directory specified by `${data_feats}/${train_set}` in run.sh. The file name must be `id2audiomask`. The file is organized in a line-by-line format, where each line corresponds to one utterance:
+
+```
+utterance_id audio_len sample_rate start_1,duration_1 ... start_n,duration_n
+```
+
+where:
+- utterance_id: unique utterance identifier 
+- audio_len: audio length in number of samples 
+- sample_rate: sampling rate 
+- start_i,duration_i: start time (in seconds) and duration (in seconds) of the i-th speaker in the mixed utterance
+
+Examples:
+
+Single-speaker: train-960-1mix-043830 243040 16000
+
+Two-speaker: train-960-2mix-020034 257785 16000 0.0,5.12 3.2815494853243217,12.8300625
+
+
+**Step 3**:
 After data preparation, run `run.sh` under egs2. Specifically, execute Stage 11 to Stage 13. Before running Stage 12–13, use average_ckpt.py to average the last five checkpoints.
 
-Step 4:
+**Step 4**:
 Use `run_pi_scoring.sh` for model evaluation. The evaluation script is adapted from Speaker-Aware-CTC, and we thank the authors for their open-source contribution.
 
 

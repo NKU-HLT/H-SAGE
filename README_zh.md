@@ -97,13 +97,32 @@ GLAD 的最新结构更新主要体现在 每个 MoLE 引入了独立的 Global 
 
 本项目基于[ESPnet](https://github.com/espnet/espnet)框架进行开发。
 
-步骤1：将本仓库中H-SAGE-NEW或者H-SAGE目录下的`egs2`，`espnet`，`espnet2`目录替换至官方[ESPnet](https://github.com/espnet/espnet)仓库对应目录中，并根据实际情况修改配置（如数据路径等）。
+**步骤1**：将本仓库中H-SAGE-NEW或者H-SAGE目录下的`egs2`，`espnet`，`espnet2`目录替换至官方[ESPnet](https://github.com/espnet/espnet)仓库对应目录中，并根据实际情况修改配置（如数据路径等）。
 
-步骤2：准备好数据集，例如本工作利用librispeech混合了一共1770小时的包含单说话人和双说话人的数据集。之后运行egs2下面的`run.sh`对应的数据预处理阶段的Stage。
+**步骤2**：准备好数据集
 
-步骤3：准备好数据，运行egs2下面的`run.sh`。运行run.sh的stage11~stage13，在运行stage12~stage13之前，需要用average_ckpt.py把最后5个ckpt平均一下。
+准备好训练数据集。例如，本工作基于 LibriSpeech 构建了总计约 1770 小时的混合语音数据集，其中同时包含单说话人与双说话人样本。完成数据准备后，运行 egs2 下 run.sh 中对应的数据预处理阶段（Stage）完成特征生成。
 
-步骤4：利用`run_pi_scoring.sh`进行模型评估。评估代码参考自[Speaker-Aware-CTC](https://github.com/kjw11/Speaker-Aware-CTC)，感谢其开源支持。
+此外，还需要提前生成用于 OA Loss 的目标文件，并将其存放到` run.sh `中变量 ${data_feats}/${train_set} 所指向的目录下，文件名固定为 id2audiomask。该文件采用逐行存储格式，每一行对应一个样本，格式如下：
+
+```
+utterance_id audio_len sample_rate start_1,duration_1 ... start_n,duration_n
+```
+  - utterance_id：样本唯一标识
+  - audio_len：音频长度（采样点数量）
+  - sample_rate：采样率
+  - start_i,duration_i：第 i 个说话人在混合语音中的起始时间（秒）与持续时间（秒）
+
+示例：
+- 单说话人：train-960-1mix-043830 243040 16000
+
+- 双说话人：train-960-2mix-020034 257785 16000 0.0,5.12 3.2815494853243217,12.8300625
+
+
+
+**步骤3**：准备好数据后，运行egs2下面的`run.sh`。运行run.sh的stage11~stage13，在运行stage12~stage13之前，需要用average_ckpt.py把最后5个ckpt平均一下。
+
+**步骤4**：利用`run_pi_scoring.sh`进行模型评估。评估代码参考自[Speaker-Aware-CTC](https://github.com/kjw11/Speaker-Aware-CTC)，感谢其开源支持。
 
 
 ## 联系我们
