@@ -25,7 +25,7 @@ Existing MoE-based MTASR approaches, such as GLAD, obtain global information thr
 
 To address this limitation, we replace the original global feature extractor with a Speaker-Aware Encoder (SA-Encoder). Built upon self-attention, SA-Encoder captures long-range acoustic dependencies and generates more expressive global representations.
 
-Moreover, we introduce an Overlap-Aware Loss (OA Loss) to explicitly supervise the extracted global features. By predicting frame-level acoustic states—including silence, single-speaker speech, and overlapped speech—the model is encouraged to learn speaker-aware global representations.
+Moreover, we introduce an Overlap-Aware Loss (OA Loss) to explicitly supervise the extracted global features. By predicting frame-level acoustic states, the model is encouraged to learn speaker-aware global representations.
 
 <p align="center"> <img src="assets/OALoss.png" width="600"/> </p>
 
@@ -44,6 +44,50 @@ To address this issue, we propose Holistic Gating, where expert probabilities ar
 Experimental results demonstrate that incorporating both global and local information into expert routing leads to more effective expert collaboration and further improves recognition performance in MoE-based MTASR.
 
 Additional analyses are provided in the ablation study section.
+
+## Q&A
+
+**Q1: Since H-SAGE was finalized in December 2025 and GLAD has been updated afterward, how does H-SAGE perform under the new GLAD architecture? Are there corresponding experimental results?**
+
+> The recent update of GLAD introduces a key modification: each MoLE now adopts an independent Global Gating Router, whereas in the original version, all MoLEs shared a single global router. This change primarily affects the granularity of routing decisions and is orthogonal to the core design of H-SAGE.
+> 
+> To ensure a fair comparison, we re-train H-SAGE on top of the updated GLAD framework and evaluate both methods under identical experimental settings. We use the same datasets as in the original paper. Due to GPU memory constraints, we slightly reduce the batch size while keeping all other training hyperparameters and optimization settings unchanged. The implementation details can be found in the H-SAGE-NEW directory.
+> 
+> The experimental results are reported as follows. As shown in the results, H-SAGE consistently achieves comparable or better performance under the updated GLAD architecture. In particular, it demonstrates more stable improvements in low- and medium-overlap conditions as well as in the 3-speaker generalization setting, indicating strong robustness and transferability.
+
+<div style="overflow-x: auto;">
+  <table class="custom-table">
+    <thead>
+      <tr>
+        <th rowspan="2">Method</th>
+        <th rowspan="2">Parm.(M)</th>
+        <th colspan="2">Librispeech</th>
+        <th colspan="6">LibrispeechMix-2mix</th>
+        <th colspan="6">LibrispeechMix-3mix (Generalization)</th>
+      </tr>
+      <tr>
+        <th>Dev</th><th>Test</th>
+        <th>Dev</th><th>Test</th><th>low</th><th>mid</th><th>high</th><th>OA-WER</th>
+        <th>Dev</th><th>Test</th><th>low</th><th>mid</th><th>high</th><th>OA-WER</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>GLAD</td><td>35.31</td><td>3.4</td><td>3.8</td><td>6.2</td><td>6.2</td><td>5.0</td><td>6.3</td><td>9.2</td><td>6.8</td><td>20.9</td><td>21.1</td><td>14.7</td><td>21.1</td><td><b>27.3</b></td><td>21.0</td>
+      </tr>
+      <tr>
+        <td>H-SAGE</td><td>35.83</td><td><b>3.3</b></td><td><b>3.5</b></td><td><b>6.0</b></td><td><b>5.8</b></td><td><b>4.4</b></td><td><b>5.9</b></td><td><b>9.1</b></td><td><b>6.5</b></td><td><b>19.9</b></td><td><b>19.9</b></td><td><b>13.3</b></td><td><b>19.6</b></td><td><b>27.3</b></td><td><b>20.3</b></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+**Q2: Why do you adopt OA Loss instead of designing a dedicated speaker-aware loss?**
+> First, the purpose of introducing explicit supervision (i.e., OA Loss) is to verify that enhancing global representation learning can improve MTASR performance. From this perspective, the choice of supervision is not unique, and other loss designs may also potentially lead to performance gains.
+>
+> Second, in terms of implementation, we adopt OA Loss mainly due to its good generalization capability and relatively low design complexity. OA Loss models acoustic states, which leads to a simpler model structure and better adaptability across different scenarios and speaker configurations. Therefore, we select OA Loss as our form of explicit supervision.
+> 
+> It is worth noting that the acoustic state labels are constructed based on the duration and temporal offsets of mixed speech segments. As a result, the supervision signals are coarse-grained and approximate, and single-speaker segments may still contain silence or other ambiguities. Nevertheless, even under such noisy and weak supervision conditions, the model consistently achieves performance improvements, further validating the effectiveness and soundness of the proposed design.
 
 
 ## Contact
