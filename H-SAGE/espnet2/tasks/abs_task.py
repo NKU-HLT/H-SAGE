@@ -2352,7 +2352,7 @@ class AbsTask(ABC):
                     state_dict = state_dict["module"]
                 model.load_state_dict(
                     state_dict,
-                    strict=False,
+                    strict=True,
                 )
             except RuntimeError:
                 # Note(simpleoier): the following part is to be compatible with
