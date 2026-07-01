@@ -1,0 +1,3 @@
+beam_size: 3
+ctc_weight: 0
+lm_weight: 0
