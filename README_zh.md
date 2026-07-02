@@ -120,7 +120,7 @@ utterance_id audio_len sample_rate start_1,duration_1 ... start_n,duration_n
 
 
 
-**步骤3**：准备好数据后，运行egs2下面的`run.sh`。运行run.sh的stage11~stage13，在运行stage12~stage13之前，需要用average_ckpt.py把最后5个ckpt平均一下。
+**步骤3**：准备好数据后，运行egs2下面的`run.sh`。运行run.sh的stage11\~stage13，在运行stage12\~stage13之前，需要用average_ckpt.py把最后5个ckpt平均一下。
 
 **步骤4**：利用`run_pi_scoring.sh`进行模型评估。评估代码参考自[Speaker-Aware-CTC](https://github.com/kjw11/Speaker-Aware-CTC)，感谢其开源支持。
 
