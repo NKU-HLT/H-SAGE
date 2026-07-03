@@ -135,7 +135,15 @@ guoyujie02@mail.nankai.edu.cn
 If you find our work or code helpful, please consider citing our paper and giving this repository a ⭐.
 
 ```
-TODO
+@misc{guo2026hsageholisticspeakerawareguided,
+      title={H-SAGE: Holistic Speaker-Aware Guided Experts for MoE-based Multi-Talker ASR}, 
+      author={Yujie Guo and Jiaming Zhou and Yuhang Jia and Yang chen and Yong Qin},
+      year={2026},
+      eprint={2607.01566},
+      archivePrefix={arXiv},
+      primaryClass={cs.SD},
+      url={https://arxiv.org/abs/2607.01566}, 
+}
 ```
 
 ## Acknowledgements
