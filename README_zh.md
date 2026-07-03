@@ -2,6 +2,8 @@
 
 # H-SAGE: Holistic Speaker-Aware Guided Experts for MoE-based Multi-Talker ASR
 
+[Arxiv](https://arxiv.org/abs/2607.01566)
+
 H-SAGE（Holistic Speaker-Aware Guided Experts）是一种面向多说话人自动语音识别（Multi-Talker Automatic Speech Recognition, MTASR）的架构，用于提升重叠语音场景下的转录能力。H-SAGE建立在[GLAD](https://arxiv.org/abs/2509.13093)框架基础之上，并针对其全局建模能力与专家路由机制进行了进一步优化。
 
 我们的核心动机主要包括两个方面：
